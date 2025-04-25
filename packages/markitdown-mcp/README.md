@@ -4,7 +4,7 @@
 ![PyPI - Downloads](https://img.shields.io/pypi/dd/markitdown-mcp)
 [![Built by AutoGen Team](https://img.shields.io/badge/Built%20by-AutoGen%20Team-blue)](https://github.com/microsoft/autogen)
 
-The `markitdown-mcp` package provides a lightweight STDIO and SSE MCP server for calling MarkItDown.
+The `markitdown-mcp` package provides a lightweight STDIO and SSE MCP server for calling MarkItDown, with additional HTTP API support.
 
 It exposes one tool: `convert_to_markdown(uri)`, where uri can be any `http:`, `https:`, `file:`, or `data:` URI.
 
@@ -18,30 +18,63 @@ pip install markitdown-mcp
 
 ## Usage
 
-To run the MCP server, ussing STDIO (default) use the following command:
+### MCP Server
 
+To run the MCP server, using STDIO (default) use the following command:
 
-```bash	
+```bash
 markitdown-mcp
 ```
 
 To run the MCP server, using SSE use the following command:
 
-```bash	
+```bash
 markitdown-mcp --sse --host 127.0.0.1 --port 3001
 ```
+
+### HTTP API
+
+When running in SSE mode, the server also exposes a simple HTTP API:
+
+#### POST /convert
+
+Convert a file to markdown.
+
+**Request:**
+
+- Method: POST
+- Content-Type: application/json
+- Body:
+  ```json
+  {
+    "uri": "file:///path/to/file"
+  }
+  ```
+
+**Response:**
+
+- Content-Type: application/json
+- Body:
+  ```json
+  {
+    "markdown": "Converted markdown content"
+  }
+  ```
 
 ## Running in Docker
 
 To run `markitdown-mcp` in Docker, build the Docker image using the provided Dockerfile:
+
 ```bash
 docker build -t markitdown-mcp:latest .
 ```
 
 And run it using:
+
 ```bash
 docker run -it --rm markitdown-mcp:latest
 ```
+
 This will be sufficient for remote URIs. To access local files, you need to mount the local directory into the container. For example, if you want to access files in `/home/user/data`, you can run:
 
 ```bash
@@ -63,12 +96,7 @@ Edit it to include the following JSON entry:
   "mcpServers": {
     "markitdown": {
       "command": "docker",
-      "args": [
-        "run",
-        "--rm",
-        "-i",
-        "markitdown-mcp:latest"
-      ]
+      "args": ["run", "--rm", "-i", "markitdown-mcp:latest"]
     }
   }
 }
@@ -82,12 +110,12 @@ If you want to mount a directory, adjust it accordingly:
     "markitdown": {
       "command": "docker",
       "args": [
-	"run",
-	"--rm",
-	"-i",
-	"-v",
-	"/home/user/data:/workdir",
-	"markitdown-mcp:latest"
+        "run",
+        "--rm",
+        "-i",
+        "-v",
+        "/home/user/data:/workdir",
+        "markitdown-mcp:latest"
       ]
     }
   }
@@ -105,25 +133,27 @@ npx @modelcontextprotocol/inspector
 You can then connect to the insepctor through the specified host and port (e.g., `http://localhost:5173/`).
 
 If using STDIO:
-* select `STDIO` as the transport type,
-* input `markitdown-mcp` as the command, and
-* click `Connect`
+
+- select `STDIO` as the transport type,
+- input `markitdown-mcp` as the command, and
+- click `Connect`
 
 If using SSE:
-* select `SSE` as the transport type,
-* input `http://127.0.0.1:3001/sse` as the URL, and
-* click `Connect`
+
+- select `SSE` as the transport type,
+- input `http://127.0.0.1:3001/sse` as the URL, and
+- click `Connect`
 
 Finally:
-* click the `Tools` tab,
-* click `List Tools`,
-* click `convert_to_markdown`, and
-* run the tool on any valid URI.
+
+- click the `Tools` tab,
+- click `List Tools`,
+- click `convert_to_markdown`, and
+- run the tool on any valid URI.
 
 ## Security Considerations
 
 The server does not support authentication, and runs with the privileges if the user running it. For this reason, when running in SSE mode, it is recommended to run the server bound to `localhost` (default).
-
 
 ## Trademarks
 
