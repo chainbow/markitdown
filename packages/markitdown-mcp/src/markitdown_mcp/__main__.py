@@ -1,5 +1,4 @@
 import sys
-import logging
 from typing import Any
 from mcp.server.fastmcp import FastMCP
 from starlette.applications import Starlette
@@ -10,13 +9,6 @@ from mcp.server import Server
 from markitdown import MarkItDown
 from starlette.responses import JSONResponse
 import uvicorn
-
-# 配置日志
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
 
 # Initialize FastMCP server for MarkItDown (SSE)
 mcp = FastMCP("markitdown")
@@ -60,7 +52,6 @@ def create_starlette_app(mcp_server: Server, *, debug: bool = False) -> Starlett
             return JSONResponse({"markdown": markdown})
             
         except Exception as e:
-            logger.error(f"Error processing request: {e}")
             return JSONResponse(
                 {"error": str(e)}, 
                 status_code=500
@@ -78,9 +69,6 @@ def create_starlette_app(mcp_server: Server, *, debug: bool = False) -> Starlett
 
 # Main entry point
 def main():
-    logger.info("Starting markitdown-mcp server")
-    logger.debug(f"Command line arguments: {sys.argv}")
-    
     import argparse
 
     mcp_server = mcp._mcp_server
@@ -99,32 +87,23 @@ def main():
         "--port", type=int, default=None, help="Port to listen on (default: 3001)"
     )
     
-    try:
-        args = parser.parse_args()
-        logger.debug(f"Parsed arguments: {args}")
-    except Exception as e:
-        logger.error(f"Error parsing arguments: {e}")
-        raise
+    args = parser.parse_args()
 
     if not args.sse and (args.host or args.port):
         error_msg = "Host and port arguments are only valid when using SSE transport."
-        logger.error(error_msg)
         parser.error(error_msg)
         sys.exit(1)
 
     if args.sse:
-        logger.info("Starting in SSE mode")
         starlette_app = create_starlette_app(mcp_server, debug=True)
         host = args.host if args.host else "127.0.0.1"
         port = args.port if args.port else 3001
-        logger.info(f"Binding to {host}:{port}")
         uvicorn.run(
             starlette_app,
             host=host,
             port=port,
         )
     else:
-        logger.info("Starting in STDIO mode")
         mcp.run()
 
 
